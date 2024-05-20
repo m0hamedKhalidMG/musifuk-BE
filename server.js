@@ -19,7 +19,7 @@ mongoose.connection.on("error", (err) => {
 const glob = require("glob");
 const path = require("path");
 
- glob.sync("./models/*.js").forEach(function (file) {
+ glob.sync("./models/**/*.js").forEach(function (file) {
    require(path.resolve(file));
  });
 

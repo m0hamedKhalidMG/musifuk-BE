@@ -4,6 +4,7 @@ const jwt = require("jsonwebtoken");
 const mongoose = require("mongoose");
 
 const Admin = mongoose.model("Admin");
+const Driver = mongoose.model("Driver");
 
 require("dotenv").config({ path: ".env" });
 
@@ -59,22 +60,28 @@ exports.register = async (req, res) => {
 
 exports.login = async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { email, password, role } = req.body;
 
-    // validate
-    if (!email || !password)
+    // Validate input
+    if (!email || !password || !role)
       return res.status(400).json({ msg: "Not all fields have been entered." });
 
-    const admin = await Admin.findOne({ email: email });
-    // console.log(admin);
-    if (!admin)
+    // Check user type based on role
+    const User = role === "Driver" ? Driver : Admin;
+
+    // Find user by email
+    const user = await User.findOne({ email });
+
+    // Return error if user not found
+    if (!user)
       return res.status(400).json({
         success: false,
         result: null,
         message: "No account with this email has been registered.",
       });
 
-    const isMatch = await bcrypt.compare(password, admin.password);
+    // Compare passwords
+    const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch)
       return res.status(400).json({
         success: false,
@@ -82,36 +89,39 @@ exports.login = async (req, res) => {
         message: "Invalid credentials.",
       });
 
+    // Generate JWT token
     const token = jwt.sign(
       {
         exp: Math.floor(Date.now() / 1000) + 60 * 60 * 24,
-        id: admin._id,
+        id: user._id,
       },
       process.env.JWT_SECRET
     );
 
-    const result = await Admin.findOneAndUpdate(
-      { _id: admin._id },
+    // Update user's login status
+    const result = await User.findByIdAndUpdate(
+      { _id: user._id },
       { isLoggedIn: true },
-      {
-        new: true,
-      }
+      { new: true }
     ).exec();
 
-    res.json({
+    // Prepare response based on user role
+    const response = {
       success: true,
       result: {
         token,
+        role: role,
         admin: {
           id: result._id,
           name: result.name,
           isLoggedIn: result.isLoggedIn,
         },
       },
-      message: "Successfully login admin",
-    });
+      message: `Successfully login ${role.toLowerCase()}`,
+    };
+
+    res.json(response);
   } catch (err) {
-    // res.status(500).json({ success: false, result:null, message: err.message });
     res
       .status(500)
       .json({ success: false, result: null, message: err.message });

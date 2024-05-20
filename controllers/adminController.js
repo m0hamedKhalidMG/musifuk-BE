@@ -1,7 +1,6 @@
 const mongoose = require("mongoose");
 const Admin = mongoose.model("Admin");
 
-
 exports.list = async (req, res) => {
   const page = req.query.page || 1;
   const limit = parseInt(req.query.items) || 10;
@@ -117,7 +116,6 @@ exports.read = async (req, res) => {
   }
 };
 
-
 exports.create = async (req, res) => {
   try {
     let { email, password } = req.body;
@@ -171,8 +169,6 @@ exports.create = async (req, res) => {
     return res.status(500).json({ success: false, message: "there is error" });
   }
 };
-
-
 
 exports.update = async (req, res) => {
   try {
