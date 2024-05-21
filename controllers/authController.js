@@ -94,6 +94,8 @@ exports.login = async (req, res) => {
       {
         exp: Math.floor(Date.now() / 1000) + 60 * 60 * 24,
         id: user._id,
+        role: role 
+
       },
       process.env.JWT_SECRET
     );
@@ -148,37 +150,53 @@ exports.isValidToken = async (req, res, next) => {
         jwtExpired: true,
       });
 
-    const admin = await Admin.findOne({ _id: verified.id });
-    if (!admin)
-      return res.status(401).json({
-        success: false,
-        result: null,
-        message: "Admin doens't Exist, authorization denied.",
-        jwtExpired: true,
-      });
-
-    if (admin.isLoggedIn === false)
-      return res.status(401).json({
-        success: false,
-        result: null,
-        message: "Admin is already logout try to login, authorization denied.",
-        jwtExpired: true,
-      });
-    else {
-      req.admin = admin;
-      // console.log(req.admin);
+      let user = null;
+      if (verified.role === 'Admin') {
+        user = await Admin.findOne({ _id: verified.id });
+        if (!user)
+          return res.status(401).json({
+            success: false,
+            result: null,
+            message: "Admin doesn't exist, authorization denied.",
+            jwtExpired: true,
+          });
+      } else if (verified.role === 'Driver') {
+        user = await Driver.findOne({ _id: verified.id });
+        if (!user)
+          return res.status(401).json({
+            success: false,
+            result: null,
+            message: "Driver doesn't exist, authorization denied.",
+            jwtExpired: true,
+          });
+      } else {
+        return res.status(401).json({
+          success: false,
+          result: null,
+          message: "Invalid role, authorization denied.",
+          jwtExpired: true,
+        });
+      }
+  
+      if (user.isLoggedIn === false)
+        return res.status(401).json({
+          success: false,
+          result: null,
+          message: `${verified.role} is already logged out, try to login again, authorization denied.`,
+          jwtExpired: true,
+        });
+  
+      req.user = user; // Attach the user to the request object
       next();
+    } catch (err) {
+      res.status(500).json({
+        success: false,
+        result: null,
+        message: err.message,
+        jwtExpired: true,
+      });
     }
-  } catch (err) {
-    res.status(500).json({
-      success: false,
-      result: null,
-      message: err.message,
-      jwtExpired: true,
-    });
-  }
-};
-
+  };
 exports.logout = async (req, res) => {
   const result = await Admin.findOneAndUpdate(
     { _id: req.admin._id },
@@ -189,4 +207,14 @@ exports.logout = async (req, res) => {
   ).exec();
 
   res.status(200).json({ isLoggedIn: result.isLoggedIn });
+};
+exports.isDriver = (req, res, next) => {
+  if (req.user.role !== 'Driver') {
+    return res.status(403).json({
+      success: false,
+      result: null,
+      message: "Access denied. Only drivers are allowed to access this route.",
+    });
+  }
+  next();
 };

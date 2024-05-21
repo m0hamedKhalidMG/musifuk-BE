@@ -4,11 +4,12 @@ const { catchErrors } = require("../handlers/errorHandlers");
 const router = express.Router();
 
 const adminController = require("../controllers/adminController");
-
+const profileDriver = require("../controllers/ambulance/profiledriver/ProfileDriverController");
 const RequestsController = require("../controllers/ambulance/RequestsController");
 
 const driverController = require("../controllers/ambulance/driverController");
 const ambulanceController = require("../controllers/ambulance/CarController");
+const _authController = require("../controllers/authController");
 
 ////////////////adminController//////////////////////////
 router.route("/admin/create").post(catchErrors(adminController.create));
@@ -27,7 +28,7 @@ router
 router
   .route("/ambulance/driver")
   .get(catchErrors(driverController.list))
-  .post((driverController.create));
+  .post(driverController.create);
 router
   .route("/ambulance/driver/:id")
   .delete(catchErrors(driverController.delete))
@@ -63,4 +64,19 @@ router
   .route("/ambulance/requestscar/:id")
   .delete(catchErrors(RequestsController.deleteAmbulanceRequest));
 
+///////////driverProfile/////////
+
+router
+  .route("/ambulance/driverProfile")
+  .all(_authController.isDriver)
+  .get(catchErrors(profileDriver.getDriverDetails));
+
+router
+  .route("/ambulance/driver/requestscars/:carId")
+  .all(_authController.isDriver)
+  .get(catchErrors(profileDriver.getRequestsByCar));
+
+router
+  .route("/ambulance/car/status")
+  .post(_authController.isDriver, profileDriver.updateCarStatus);
 module.exports = router;
