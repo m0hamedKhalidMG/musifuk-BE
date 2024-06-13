@@ -33,6 +33,7 @@ exports.catchErrors = (fn) => {
       ),
     };
   
+    console.log(errorDetails)
     res.status(500).json({
       success: false,
       message: "Oops ! Error in Server",
