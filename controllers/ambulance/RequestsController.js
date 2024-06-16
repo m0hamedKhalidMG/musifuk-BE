@@ -2,6 +2,7 @@ const mongoose = require("mongoose");
 
 const RequestsCar = mongoose.model("RequestsCar");
 const AmbulanceCar = mongoose.model("AmbulanceCar");
+const DescribeSate = mongoose.model("DescribeSate");
 
 exports.createAmbulanceRequest = async (req, res) => {
   const newRequest = await RequestsCar.create(req.body);
@@ -94,4 +95,27 @@ exports.markPatientsAsDelivered = async (req, res) => {
   await request.save();
 
   res.json({ message: "Patients marked as delivered", request });
+};
+exports.getAllDescribeSate = async (req, res) => {
+  try {
+      const describeSates = await DescribeSate.find().populate('requestID');
+      res.status(200).json(describeSates);
+  } catch (error) {
+      console.error('Error getting DescribeSate entries:', error);
+      res.status(500).json({ message: 'Internal server error' });
+  }
+};
+exports.getDescribeSateById = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+      const describeSate = await DescribeSate.findById(id).populate('requestID');
+      if (!describeSate) {
+          return res.status(404).json({ message: 'DescribeSate not found' });
+      }
+      res.status(200).json(describeSate);
+  } catch (error) {
+      console.error('Error getting DescribeSate entry:', error);
+      res.status(500).json({ message: 'Internal server error' });
+  }
 };
