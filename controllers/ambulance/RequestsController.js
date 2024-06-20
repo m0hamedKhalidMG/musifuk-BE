@@ -1,8 +1,10 @@
 const mongoose = require("mongoose");
+const PatientAssignment = mongoose.model("PatientAssignment");
 
 const RequestsCar = mongoose.model("RequestsCar");
 const AmbulanceCar = mongoose.model("AmbulanceCar");
 const DescribeSate = mongoose.model("DescribeSate");
+const Hospital = mongoose.model("Hospital");
 
 exports.createAmbulanceRequest = async (req, res) => {
   const newRequest = await RequestsCar.create(req.body);
@@ -98,24 +100,163 @@ exports.markPatientsAsDelivered = async (req, res) => {
 };
 exports.getAllDescribeSate = async (req, res) => {
   try {
-      const describeSates = await DescribeSate.find().populate('requestID');
-      res.status(200).json(describeSates);
+    const describeSates = await DescribeSate.find().populate("requestID");
+    res.status(200).json(describeSates);
   } catch (error) {
-      console.error('Error getting DescribeSate entries:', error);
-      res.status(500).json({ message: 'Internal server error' });
+    console.error("Error getting DescribeSate entries:", error);
+    res.status(500).json({ message: "Internal server error" });
   }
 };
 exports.getDescribeSateById = async (req, res) => {
   const { id } = req.params;
 
   try {
-      const describeSate = await DescribeSate.findById(id).populate('requestID');
-      if (!describeSate) {
-          return res.status(404).json({ message: 'DescribeSate not found' });
-      }
-      res.status(200).json(describeSate);
+    const describeSate = await DescribeSate.findById(id).populate("requestID");
+    if (!describeSate) {
+      return res.status(404).json({ message: "DescribeSate not found" });
+    }
+    res.status(200).json(describeSate);
   } catch (error) {
-      console.error('Error getting DescribeSate entry:', error);
-      res.status(500).json({ message: 'Internal server error' });
+    console.error("Error getting DescribeSate entry:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+exports.assignHospital = async (req, res) => {
+  const { requestId, hospitalId } = req.params;
+
+  try {
+    const request = await RequestsCar.findById(requestId);
+    if (!request) {
+      return res.status(404).json({ message: "Request not found" });
+    }
+
+    const hospital = await Hospital.findById(hospitalId);
+    if (!hospital) {
+      return res.status(404).json({ message: "Hospital not found" });
+    }
+
+    // Assign the hospital to the request
+    request.assignedHospital = hospitalId;
+
+    await request.save();
+
+    res.json({ message: "Hospital assigned successfully", request });
+  } catch (error) {
+    console.error("Error assigning hospital:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+exports.filterHospitals = async (req, res) => {
+  const {
+    coordinates,
+    maxDistance,
+    department,
+    medicalEquipment,
+    serumsAndVaccines,
+    minBeds,
+  } = req.body;
+
+  try {
+    // Base query
+    let query = {
+      departments: {
+        $elemMatch: {
+          name: department,
+          numberOfBeds: { $gte: minBeds },
+        },
+      },
+    };
+    // Add medical equipment filtering if provided
+    if (medicalEquipment) {
+      query["medicalEquipment"] = { $all: medicalEquipment };
+    }
+
+    // Add serums and vaccines filtering if provided
+    if (serumsAndVaccines) {
+      query["serumsAndVaccines"] = { $all: serumsAndVaccines };
+    }
+
+    // Initial filtering based on the query
+    let hospitals = await Hospital.find(query);
+
+    // If there are no hospitals meeting the criteria, return an empty array
+    if (!hospitals.length) {
+      return res.json([]);
+    }
+
+    // Apply geospatial filtering if coordinates and maxDistance are provided
+    if (coordinates && maxDistance) {
+      hospitals = await Hospital.find({
+        _id: { $in: hospitals.map((hospital) => hospital._id) },
+        location: {
+          $near: {
+            $geometry: {
+              type: "Point",
+              coordinates: coordinates,
+            },
+            $maxDistance: maxDistance,
+          },
+        },
+      });
+    }
+
+    res.json(hospitals);
+  } catch (error) {
+    console.error("Error filtering hospitals:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+exports.assignHospitalToPatient = async (req, res) => {
+  const { patientId, hospitalId, department, minBeds } = req.body;
+
+  try {
+    // Find the hospital by ID
+    const hospital = await Hospital.findById(hospitalId);
+
+    if (!hospital) {
+      return res.status(404).json({ message: "Hospital not found" });
+    }
+
+    // Find the department in the hospital
+    const dept = hospital.departments.find((dept) => dept.name === department);
+
+    if (!dept) {
+      return res
+        .status(404)
+        .json({ message: "Department not found in the hospital" });
+    }
+
+    // Check if there are available beds
+    if (dept.numberOfBeds < minBeds) {
+      return res
+        .status(400)
+        .json({ message: "No available beds in the specified department" });
+    }
+
+    // Decrease the number of available beds
+    dept.numberOfBeds -= minBeds;
+
+    // Save the updated hospital
+    await hospital.save();
+
+    // Create a patient assignment
+    const assignment = new PatientAssignment({
+      patientId,
+      hospitalId,
+      department,
+    });
+
+    // Save the patient assignment
+    await assignment.save();
+
+    res.json({
+      message: "Hospital assigned to patient successfully",
+      assignment,
+    });
+  } catch (error) {
+    console.error("Error assigning hospital to patient:", error);
+    res.status(500).json({ message: "Internal server error" });
   }
 };

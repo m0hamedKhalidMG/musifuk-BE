@@ -1,6 +1,7 @@
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 const AmbulanceCar = require('../../models/ambulance/ambulanceCar.js');
+const Hospital = require('../../models/hospital/Hospitals.js');
 
 mongoose.Promise = global.Promise;
 const requestsCar  = new Schema({
@@ -17,8 +18,8 @@ const requestsCar  = new Schema({
     description: { type: String ,required: true}, 
     additionalCosts: { type: Number, default: 0 },
     Numberofpatients : { type: Number, default: 1 },
-    assignedCars: [{ type: mongoose.Schema.Types.ObjectId, ref: 'AmbulanceCar', default: null }]
-
+    assignedCars: [{ type: mongoose.Schema.Types.ObjectId, ref: 'AmbulanceCar', default: null }],
+    assignedHospital: { type: mongoose.Schema.Types.ObjectId, ref: "Hospital", default: null },
 
 
 });

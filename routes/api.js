@@ -6,12 +6,14 @@ const router = express.Router();
 const adminController = require("../controllers/adminController");
 const profileDriver = require("../controllers/ambulance/profiledriver/ProfileDriverController");
 const RequestsController = require("../controllers/ambulance/RequestsController");
+const hospitalController = require('../controllers/hospitalController');
 
 const driverController = require("../controllers/ambulance/driverController");
 const ambulanceController = require("../controllers/ambulance/CarController");
 const _authController = require("../controllers/authController");
 
 ////////////////adminController//////////////////////////
+
 router
   .route("/admin/create")
   .all(_authController.IsAdmin)
@@ -69,8 +71,14 @@ router
   .delete(catchErrors(ambulanceController.delete))
   .patch(catchErrors(ambulanceController.update));
 
+router.post('/assign', RequestsController.assignHospitalToPatient);
 ////////////////hospitalController//////////////////////////
-
+router.post('/hospitals/create', hospitalController.createHospital);
+router.post(
+  "/hospitals/filter",
+  _authController.IsAdmin,
+  RequestsController.filterHospitals
+);
 ////////////////requestcarController//////////////////////////
 router.get(
   "/getAllDescribeSate",

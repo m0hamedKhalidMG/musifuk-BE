@@ -4,17 +4,29 @@ mongoose.Promise = global.Promise;
 
 const hospitalSchema = new mongoose.Schema({
     name: { type: String, required: true },
-    address: { type: String, required: true },
     departments: [{
       name: { type: String, required: true },
       numberOfBeds: { type: Number, required: true }
       // You can add more department details here
     }],
+    address: { type: String, required: true },
+
+    location: {
+      type: {
+        type: String,
+        enum: ['Point'],
+        required: true
+      },
+      coordinates: {
+        type: [Number],
+        required: true
+      }
+    },
     medicalEquipment: [String], // Assuming medical equipment names are stored as strings
     serumsAndVaccines: [String], // Assuming serum and vaccine names are stored as strings
-    currentBedAvailability: { type: Number, required: true },
-    numberOfEmergencyBeds: { type: Number, required: true } 
+   
   });
-  
+  hospitalSchema.index({ location: '2dsphere' }); // Create a geospatial index
+
   // Create Hospital model
   module.exports = mongoose.model('Hospital', hospitalSchema);
