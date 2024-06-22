@@ -5,6 +5,7 @@ const mongoose = require("mongoose");
 
 const Admin = mongoose.model("Admin");
 const Driver = mongoose.model("Driver");
+const Owner = mongoose.model("Owner");
 
 require("dotenv").config({ path: ".env" });
 
@@ -67,7 +68,16 @@ exports.login = async (req, res) => {
       return res.status(400).json({ msg: "Not all fields have been entered." });
 
     // Check user type based on role
-    const User = role === "Driver" ? Driver : Admin;
+    const User =
+      role === "Driver"
+        ? Driver
+        : role === "Admin"
+        ? Admin
+        : role === "Owner"
+        ? Owner
+        : (() => {
+            throw new Error("Invalid role");
+          })();
 
     // Find user by email
     const user = await User.findOne({ email });
@@ -120,7 +130,9 @@ exports.login = async (req, res) => {
       },
       message: `Successfully login ${role.toLowerCase()}`,
     };
-
+    if (role === "Owner") {
+      response.result.admin.hospitalId = result.hospital;
+    }
     res.json(response);
   } catch (err) {
     res
@@ -167,6 +179,16 @@ exports.isValidToken = async (req, res, next) => {
           success: false,
           result: null,
           message: "Driver doesn't exist, authorization denied.",
+          jwtExpired: true,
+        });
+    } else if (verified.role === "Owner") {
+      req.role = "Owner";
+      user = await Owner.findOne({ _id: verified.id });
+      if (!user)
+        return res.status(401).json({
+          success: false,
+          result: null,
+          message: "Owner OF Hospital doesn't exist, authorization denied.",
           jwtExpired: true,
         });
     } else {
@@ -224,6 +246,17 @@ exports.IsAdmin = (req, res, next) => {
       success: false,
       result: null,
       message: "Access denied. Only Admin are allowed to access this route.",
+    });
+  }
+  next();
+};
+exports.Is_admin_hospital = (req, res, next) => {
+  if (req.role !== "Owner") {
+    return res.status(403).json({
+      success: false,
+      result: null,
+      message:
+        "Access denied. Only hospital Admin are allowed to access this route.",
     });
   }
   next();

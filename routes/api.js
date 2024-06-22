@@ -71,13 +71,31 @@ router
   .delete(catchErrors(ambulanceController.delete))
   .patch(catchErrors(ambulanceController.update));
 
-router.post('/assign', RequestsController.assignHospitalToPatient);
+router.post('/assign', _authController.Is_admin_hospital, RequestsController.assignHospitalToPatient);
 ////////////////hospitalController//////////////////////////
 router.post('/hospitals/create', hospitalController.createHospital);
 router.post(
   "/hospitals/filter",
-  _authController.IsAdmin,
+  _authController.Is_admin_hospital,
   RequestsController.filterHospitals
+);
+router.get(
+  "/hospital/gethospital",
+  _authController.Is_admin_hospital,
+  hospitalController.getOwnerHospitals
+);
+router.get(
+  "/hospital/getPatient",
+  _authController.Is_admin_hospital,
+  hospitalController.getPatients
+);
+router.post(
+  "/hospital/addonwer",
+  _authController.IsAdmin,
+  hospitalController.registerowner
+);
+router.post('/hospitals/addpatient', _authController.Is_admin_hospital, hospitalController.addnewpatient
+ 
 );
 ////////////////requestcarController//////////////////////////
 router.get(

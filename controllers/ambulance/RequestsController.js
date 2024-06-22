@@ -151,30 +151,37 @@ exports.filterHospitals = async (req, res) => {
   const {
     coordinates,
     maxDistance,
-    department,
+    departments,
     medicalEquipment,
     serumsAndVaccines,
-    minBeds,
+  
   } = req.body;
 
   try {
-    // Base query
-    let query = {
-      departments: {
-        $elemMatch: {
-          name: department,
-          numberOfBeds: { $gte: minBeds },
-        },
-      },
-    };
+    // Base query for department and bed availability
+    let query = {};
+
+    if (departments && departments.length > 0) {
+      query["departments"] = {
+        $all: departments.map((dept) => ({
+          $elemMatch: {
+            name: dept.name,
+            numberOfBeds: { $gte: dept.minBeds },
+          },
+        })),
+      };
+    }
+
     // Add medical equipment filtering if provided
-    if (medicalEquipment) {
-      query["medicalEquipment"] = { $all: medicalEquipment };
+    if (medicalEquipment && medicalEquipment.length > 0) {
+      query["medicalEquipment.name"] = { $all: medicalEquipment };
+      query["medicalEquipment.quantity"] = { $gt: 0 };
     }
 
     // Add serums and vaccines filtering if provided
-    if (serumsAndVaccines) {
-      query["serumsAndVaccines"] = { $all: serumsAndVaccines };
+    if (serumsAndVaccines && serumsAndVaccines.length > 0) {
+      query["serumsAndVaccines.name"] = { $all: serumsAndVaccines };
+      query["serumsAndVaccines.quantity"] = { $gt: 0 };
     }
 
     // Initial filtering based on the query
@@ -207,7 +214,6 @@ exports.filterHospitals = async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 };
-
 exports.assignHospitalToPatient = async (req, res) => {
   const { patientId, hospitalId, department, minBeds } = req.body;
 
