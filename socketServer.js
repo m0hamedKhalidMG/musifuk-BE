@@ -34,7 +34,8 @@ function initializeSocketServer(server) {
         );
 
         if (updatedCar) {
-          io.to(`car_${carNumber}`).emit('positionUpdated', { message: 'Position updated', car: updatedCar });
+
+          io.to(`car_${carNumber}`).emit('positionUpdated', { message: 'Position updated',  coordinates: newCoordinates });
         } else {
           socket.emit('error', { message: 'Ambulance car not found' });
         }

@@ -15,16 +15,19 @@
                 // Join a room specific to your ambulance car (replace 'carNumber' with actual car number)
                 const carNumber = 'ABC123';
                 socket.emit('joinRoom', `car_${carNumber}`);
-                setInterval(() => {
+            //     setInterval(() => {
 
-                // Example of sending position updates
-                    const newCoordinates =  [-79.005972, 4.712776];
-                    socket.emit('updatePosition', { carNumber, newCoordinates });
+            //     // Example of sending position updates
+            //         const newCoordinates =  [-79.005972, 4.712776];
+            //         socket.emit('updatePosition', { carNumber, newCoordinates });
             
-                }, 5000);
-            });
+            //     }, 5000);
+             });
 
-
+            socket.on('lastLocation', (data) => {
+      console.log('Last known location received:', data.coordinates);
+      // Handle displaying the last known location on the UI
+    });
             socket.on('positionUpdated', (data) => {
                 console.log('Position updated:', data);
                 // Handle displaying the updated position on the UI

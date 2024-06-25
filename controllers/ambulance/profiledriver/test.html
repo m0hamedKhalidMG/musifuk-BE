@@ -19,7 +19,16 @@
 
     socket.on('connect', () => {
       console.log('Connected to server');
-      
+      const carNumber = 'ABC123';
+                socket.emit('joinRoom', `car_${carNumber}`);
+                setInterval(() => {
+
+                // Example of sending position updates
+                    const newCoordinates =  [-72.005972, 4.712776];
+                    socket.emit('updatePosition', { carNumber, newCoordinates });
+            
+                }, 5000);
+          
       // Join a room specific to your user or some identifier (replace 'roomName' with actual room name)
       const roomName = 'car_663f64276980973d60a20800';
       socket.emit('joinRoom', roomName);
