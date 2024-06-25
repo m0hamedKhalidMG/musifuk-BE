@@ -5,6 +5,7 @@ const RequestsCar = mongoose.model("RequestsCar");
 const AmbulanceCar = mongoose.model("AmbulanceCar");
 const DescribeSate = mongoose.model("DescribeSate");
 const Hospital = mongoose.model("Hospital");
+const { xx, getIo } = require("../../socketServer");
 
 exports.createAmbulanceRequest = async (req, res) => {
   const newRequest = await RequestsCar.create(req.body);
@@ -28,7 +29,6 @@ exports.deleteAmbulanceRequest = async (req, res) => {
 exports.assignCarToRequest = async (req, res) => {
   const { requestId, carIds } = req.body;
   const cars = await AmbulanceCar.find({ _id: { $in: carIds } });
-
   if (cars.length !== carIds.length) {
     return res.status(400).json({ error: "One or more cars not found" });
   }
@@ -54,6 +54,15 @@ exports.assignCarToRequest = async (req, res) => {
     { $set: { status: "busy", deliveryStatus: "on progress" } }
   );
 
+  const io = getIo();
+
+  carIds.forEach((carId) => {
+    const room = `car_${carId}`;
+    io.to(room).emit("newassignment", {
+      message: "You have a new assignment",
+      request: updatedRequest,
+    });
+  });
   res.json(updatedRequest);
 };
 
@@ -154,7 +163,6 @@ exports.filterHospitals = async (req, res) => {
     departments,
     medicalEquipment,
     serumsAndVaccines,
-  
   } = req.body;
 
   try {

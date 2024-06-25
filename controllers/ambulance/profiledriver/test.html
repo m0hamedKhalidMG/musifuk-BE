@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Socket.io Example</title>
+</head>
+<body>
+  <div id="messages"></div>
+  <input type="text" id="messageInput" placeholder="Type your message...">
+  <button id="sendButton">Send</button>
+
+  <!-- Include socket.io library -->
+  <script src="https://cdn.socket.io/4.0.1/socket.io.min.js"></script>
+  
+  <script>
+    // Initialize socket.io client
+    const socket = io('http://localhost:8888'); // Adjust URL to match your server
+
+    socket.on('connect', () => {
+      console.log('Connected to server');
+      
+      // Join a room specific to your user or some identifier (replace 'roomName' with actual room name)
+      const roomName = 'car_663f64276980973d60a20800';
+      socket.emit('joinRoom', roomName);
+  
+      // Example of sending a message
+      document.getElementById('sendButton').addEventListener('click', () => {
+        const message = document.getElementById('messageInput').value;
+        socket.emit('sendMessage', { room: roomName, message });
+        document.getElementById('messageInput').value = ''; // Clear input after sending
+      });
+    });
+  
+    socket.on('newassignment', (data) => {
+      console.log('New message received:', data.request);
+      // Display the new message on the UI
+      const messagesDiv = document.getElementById('messages');
+      const newMessageDiv = document.createElement('div');
+      newMessageDiv.textContent = data.message;
+      messagesDiv.appendChild(newMessageDiv);
+    });
+  
+    socket.on('disconnect', () => {
+      console.log('Disconnected from server');
+    });
+  </script>
+</body>
+</html>

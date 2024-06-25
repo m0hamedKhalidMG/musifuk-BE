@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ambulance Tracker</title>
+    <script src="https://cdn.socket.io/4.0.1/socket.io.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const socket = io('http://localhost:8888'); // Adjust URL to match your server
+
+            socket.on('connect', () => {
+                console.log('Connected to server');
+             
+                // Join a room specific to your ambulance car (replace 'carNumber' with actual car number)
+                const carNumber = 'ABC123';
+                socket.emit('joinRoom', `car_${carNumber}`);
+                setInterval(() => {
+
+                // Example of sending position updates
+                    const newCoordinates =  [-79.005972, 4.712776];
+                    socket.emit('updatePosition', { carNumber, newCoordinates });
+            
+                }, 5000);
+            });
+
+
+            socket.on('positionUpdated', (data) => {
+                console.log('Position updated:', data);
+                // Handle displaying the updated position on the UI
+            });
+
+            socket.on('error', (error) => {
+                console.error('Error:', error);
+            });
+
+            socket.on('disconnect', () => {
+                console.log('Disconnected from server');
+            });
+        });
+    </script>
+</head>
+<body>
+    <h1>Ambulance Tracker</h1>
+</body>
+</html>
