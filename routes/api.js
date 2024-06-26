@@ -3,7 +3,6 @@ const { catchErrors } = require("../handlers/errorHandlers");
 
 const router = express.Router();
 
-const adminController = require("../controllers/adminController");
 const profileDriver = require("../controllers/ambulance/profiledriver/ProfileDriverController");
 const RequestsController = require("../controllers/ambulance/RequestsController");
 const hospitalController = require("../controllers/hospitalController");
@@ -14,35 +13,9 @@ const _authController = require("../controllers/authController");
 
 ////////////////adminController//////////////////////////
 
-router
-  .route("/admin/create")
-  .all(_authController.IsAdmin)
-  .post(catchErrors(adminController.create));
-router
-  .route("/admin/read/:id")
-  .all(_authController.IsAdmin)
-  .get(catchErrors(adminController.read));
-router
-  .route("/admin/update/:id")
-  .all(_authController.IsAdmin)
-  .patch(catchErrors(adminController.update));
-router
-  .route("/admin/delete/:id")
-  .all(_authController.IsAdmin)
-  .delete(catchErrors(adminController.delete));
-router
-  .route("/admin/search")
-  .all(_authController.IsAdmin)
-  .get(catchErrors(adminController.search));
-router
-  .route("/admin/list")
-  .all(_authController.IsAdmin)
-  .get(catchErrors(adminController.list));
 
-router
-  .route("/admin/password-update/:id")
-  .all(_authController.IsAdmin)
-  .patch(catchErrors(adminController.updatePassword));
+
+
 
 ////////////////ambulance driver Controller//////////////////////////
 
