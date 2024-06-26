@@ -9,7 +9,7 @@ const socketIo = require("socket.io");
 const apiRouter = require("./routes/api");
 const authApiRouter = require("./routes/auth");
 const { initializeSocketServer } = require("./socketServer"); // Import the socket server initializer
-
+require('./models/ambulance/driver.js'); 
 const errorHandlers = require("./handlers/errorHandlers");
 
 const { isValidToken } = require("./controllers/authController");
