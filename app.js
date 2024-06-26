@@ -68,6 +68,10 @@ app.use(function (req, res, next) {
     return next();
   }
 });
+app.use("/", (req, res) => {
+  res.send("hello");
+});
+
 
 app.use("/api", authApiRouter);
 
