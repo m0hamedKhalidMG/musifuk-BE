@@ -5,9 +5,10 @@ const Hospital = require("../../models/hospital/Hospitals.js");
 
 mongoose.Promise = global.Promise;
 const locationSchema = new Schema({
-  latitude: { type: Number, required: true },
-  longitude: { type: Number, required: true },
+  type: { type: String, enum: ['Point'], default: 'Point' },
+  coordinates: { type: [Number], required: true }
 });
+
 const requestsCar = new Schema({
   patientName: { type: String, required: true },
   patientAge: { type: Number, required: true },
@@ -31,17 +32,11 @@ const requestsCar = new Schema({
   },
   pickupLocation: {
     address: { type: String, required: true },
-    coordinates: {
-      latitude: { type: Number, required: true },
-      longitude: { type: Number, required: true },
-    },
+    coordinates: locationSchema,
   },
   destination: {
     address: { type: String, default: "Not determined" },
-    coordinates: {
-      latitude: { type: Number, required: true },
-      longitude: { type: Number, required: true },
-    },
+    coordinates: locationSchema,
   },
   description: { type: String, required: true },
   additionalCosts: { type: Number, default: 0 },

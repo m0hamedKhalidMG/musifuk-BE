@@ -5,10 +5,14 @@ const RequestsCar = mongoose.model("RequestsCar");
 const AmbulanceCar = mongoose.model("AmbulanceCar");
 const DescribeSate = mongoose.model("DescribeSate");
 const Hospital = mongoose.model("Hospital");
-const { xx, getIo } = require("../../socketServer");
+const {  getIo } = require("../../socketServer");
 
 exports.createAmbulanceRequest = async (req, res) => {
   const newRequest = await RequestsCar.create(req.body);
+  const io = getIo();
+
+  io.emit('newRequestCar', newRequest); // Emit event to all connected clients
+
   res.status(201).json(newRequest);
 };
 
@@ -157,16 +161,10 @@ exports.assignHospital = async (req, res) => {
 };
 
 exports.filterHospitals = async (req, res) => {
-  const {
-    coordinates,
-    maxDistance,
-    departments,
-    medicalEquipment,
-    serumsAndVaccines,
-  } = req.body;
+  const { pickupLocation, departments, medicalEquipment, serumsAndVaccines } = req.body;
 
   try {
-    // Base query for department and bed availability
+    // Define initial query based on provided filters
     let query = {};
 
     if (departments && departments.length > 0) {
@@ -180,41 +178,33 @@ exports.filterHospitals = async (req, res) => {
       };
     }
 
-    // Add medical equipment filtering if provided
     if (medicalEquipment && medicalEquipment.length > 0) {
       query["medicalEquipment.name"] = { $all: medicalEquipment };
       query["medicalEquipment.quantity"] = { $gt: 0 };
     }
 
-    // Add serums and vaccines filtering if provided
     if (serumsAndVaccines && serumsAndVaccines.length > 0) {
       query["serumsAndVaccines.name"] = { $all: serumsAndVaccines };
       query["serumsAndVaccines.quantity"] = { $gt: 0 };
     }
 
-    // Initial filtering based on the query
-    let hospitals = await Hospital.find(query);
-
-    // If there are no hospitals meeting the criteria, return an empty array
-    if (!hospitals.length) {
-      return res.json([]);
-    }
-
-    // Apply geospatial filtering if coordinates and maxDistance are provided
-    if (coordinates && maxDistance) {
-      hospitals = await Hospital.find({
-        _id: { $in: hospitals.map((hospital) => hospital._id) },
-        location: {
-          $near: {
-            $geometry: {
-              type: "Point",
-              coordinates: coordinates,
-            },
-            $maxDistance: maxDistance,
+    // Apply $geoNear aggregation for geospatial query as the first stage
+    const hospitals = await Hospital.aggregate([
+      {
+        $geoNear: {
+          near: {
+            type: "Point",
+            coordinates: pickupLocation,
           },
+          distanceField: "distance",
+          spherical: true,
         },
-      });
-    }
+      },
+      {
+        $match: query, // Apply initial filtering based on provided criteria
+      },
+      { $sort: { distance: 1 } }, // Sort by distance in ascending order
+    ]);
 
     res.json(hospitals);
   } catch (error) {
@@ -222,6 +212,7 @@ exports.filterHospitals = async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 };
+
 exports.assignHospitalToPatient = async (req, res) => {
   const { patientId, hospitalId, department, minBeds } = req.body;
 

@@ -53,14 +53,22 @@ exports.addnewpatient = async (req, res) => {
     if (!hospital) {
       return res.status(404).json({ message: "Hospital not found" });
     }
-    const departmentIndex = hospital.departments.findIndex(dep => dep.name === department);
+    const departmentIndex = hospital.departments.findIndex(
+      (dep) => dep.name === department
+    );
     if (departmentIndex === -1) {
-      return res.status(404).json({ message: `Department '${department}' not found in the hospital` });
+      return res
+        .status(404)
+        .json({
+          message: `Department '${department}' not found in the hospital`,
+        });
     }
 
     const departmentInfo = hospital.departments[departmentIndex];
     if (departmentInfo.numberOfBeds <= 0) {
-      return res.status(400).json({ message: `No available beds in department '${department}'` });
+      return res
+        .status(400)
+        .json({ message: `No available beds in department '${department}'` });
     }
 
     departmentInfo.numberOfBeds -= 1;
@@ -156,5 +164,63 @@ exports.getPatients = async (req, res) => {
   } catch (error) {
     console.error("Error fetching Patients:", error);
     res.status(500).json({ message: "Internal server error" });
+  }
+};
+exports.updateEquipment = async (req, res) => {
+  const { name, quantity } = req.body;
+  console.log(req.user);
+  try {
+    const hospital = await Hospital.findById(req.user.hospital);
+
+    if (!hospital) {
+      return res.status(404).json({ message: "Hospital not found" });
+    }
+
+    await hospital.updateMedicalEquipment(name, quantity);
+
+    return res
+      .status(200)
+      .json({ message: "Medical equipment updated successfully", hospital });
+  } catch (error) {
+    console.error("Error updating medical equipment:", error);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+};
+exports.updateserumsAndVaccines = async (req, res) => {
+  const { name, quantity } = req.body;
+  try {
+    const hospital = await Hospital.findById(req.user.hospital);
+
+    if (!hospital) {
+      return res.status(404).json({ message: "Hospital not found" });
+    }
+
+    await hospital.updateserumsAndVaccines(name, quantity);
+
+    return res
+      .status(200)
+      .json({ message: "serumsAndVaccines updated successfully", hospital });
+  } catch (error) {
+    console.error("Error updatingserumsAndVaccines:", error);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+};
+exports.updatedepartments = async (req, res) => {
+  const { name, numberOfBeds } = req.body;
+  try {
+    const hospital = await Hospital.findById(req.user.hospital);
+
+    if (!hospital) {
+      return res.status(404).json({ message: "Hospital not found" });
+    }
+
+    await hospital.updatedepartment(name, numberOfBeds);
+
+    return res
+      .status(200)
+      .json({ message: "departments updated successfully", hospital });
+  } catch (error) {
+    console.error("Error departments:", error);
+    return res.status(500).json({ message: "Internal server error" });
   }
 };

@@ -6,7 +6,7 @@ const router = express.Router();
 const adminController = require("../controllers/adminController");
 const profileDriver = require("../controllers/ambulance/profiledriver/ProfileDriverController");
 const RequestsController = require("../controllers/ambulance/RequestsController");
-const hospitalController = require('../controllers/hospitalController');
+const hospitalController = require("../controllers/hospitalController");
 
 const driverController = require("../controllers/ambulance/driverController");
 const ambulanceController = require("../controllers/ambulance/CarController");
@@ -59,6 +59,8 @@ router
 
 ////////////////ambulance car Controller//////////////////////////
 
+router.get("/ambulance/available", ambulanceController.getNearestAvailableCars);
+
 router
   .route("/ambulance/car")
   .all(_authController.IsAdmin)
@@ -71,12 +73,36 @@ router
   .delete(catchErrors(ambulanceController.delete))
   .patch(catchErrors(ambulanceController.update));
 
-router.post('/assign', _authController.Is_admin_hospital, RequestsController.assignHospitalToPatient);
+router.post(
+  "/assign",
+  _authController.Is_admin_hospital,
+  RequestsController.assignHospitalToPatient
+);
 ////////////////hospitalController//////////////////////////
-router.post('/hospitals/create', hospitalController.createHospital);
+router.post(
+  "/update-medical-equipment",
+  _authController.Is_admin_hospital,
+  hospitalController.updateEquipment
+);
+router.post(
+  "/update-department",
+  _authController.Is_admin_hospital,
+  hospitalController.updatedepartments
+);
+router.post(
+  "/update-serums-Vaccines",
+  _authController.Is_admin_hospital,
+  hospitalController.updateserumsAndVaccines
+);
+
+router.post(
+  "/hospitals/create",
+  _authController.IsAdmin,
+  hospitalController.createHospital
+);
 router.post(
   "/hospitals/filter",
-  _authController.Is_admin_hospital,
+  _authController.isDriver,
   RequestsController.filterHospitals
 );
 router.get(
@@ -94,8 +120,10 @@ router.post(
   _authController.IsAdmin,
   hospitalController.registerowner
 );
-router.post('/hospitals/addpatient', _authController.Is_admin_hospital, hospitalController.addnewpatient
- 
+router.post(
+  "/hospitals/addpatient",
+  _authController.Is_admin_hospital,
+  hospitalController.addnewpatient
 );
 ////////////////requestcarController//////////////////////////
 router.get(
@@ -112,7 +140,7 @@ router.get(
 router
   .route("/ambulance/requestscar")
   .get(catchErrors(RequestsController.getAmbulanceRequests))
-  .post(catchErrors(RequestsController.createAmbulanceRequest))
+  .post(RequestsController.createAmbulanceRequest)
   .patch(RequestsController.assignCarToRequest);
 
 router

@@ -45,6 +45,57 @@ const hospitalSchema = new mongoose.Schema({
   },],
 });
 hospitalSchema.index({ location: "2dsphere" }); // Create a geospatial index
+// Method to update medicalEquipment by name
+hospitalSchema.methods.updateMedicalEquipment = async function (name, quantity) {
+  try {
+    const hospital = this;
+    const medicalEquipmentItem = hospital.medicalEquipment.find(item => item.name === name);
 
-// Create Hospital model
+    if (medicalEquipmentItem) {
+      medicalEquipmentItem.quantity = quantity;
+    } else {
+      hospital.medicalEquipment.push({ name, quantity });
+    }
+
+    await hospital.save();
+    return hospital;
+  } catch (error) {
+    throw error;
+  }
+};
+hospitalSchema.methods.updateserumsAndVaccines = async function (name, quantity) {
+  try {
+    const hospital = this;
+    const serumsAndVaccinesitems = hospital.serumsAndVaccines.find(item => item.name === name);
+
+    if (serumsAndVaccinesitems) {
+      serumsAndVaccinesitems.quantity = quantity;
+    } else {
+      hospital.serumsAndVaccines.push({ name, quantity });
+    }
+
+    await hospital.save();
+    return hospital;
+  } catch (error) {
+    throw error;
+  }
+};
+hospitalSchema.methods.updatedepartment = async function (name, numberOfBeds) {
+  try {
+    const hospital = this;
+    const Departmentitems = hospital.departments.find(item => item.name === name);
+
+    if (Departmentitems) {
+      Departmentitems.numberOfBeds = numberOfBeds;
+    } else {
+      hospital.departments.push({ name, numberOfBeds });
+    }
+
+    await hospital.save();
+    return hospital;
+  } catch (error) {
+    throw error;
+  }
+};
+
 module.exports = mongoose.model("Hospital", hospitalSchema);

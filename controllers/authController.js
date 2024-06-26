@@ -231,6 +231,7 @@ exports.logout = async (req, res) => {
   res.status(200).json({ isLoggedIn: result.isLoggedIn });
 };
 exports.isDriver = (req, res, next) => {
+  console.log(req.user)
   if (req.user.role !== "Driver") {
     return res.status(403).json({
       success: false,
