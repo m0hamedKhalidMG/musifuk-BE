@@ -8,6 +8,8 @@
     "dev": "nodemon server.js --ignore public/",
     "production": "NODE_ENV=production",
     "setup": "node ./setup/setup.js"
+  },"engines": {
+    "node": "14.17.6"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
