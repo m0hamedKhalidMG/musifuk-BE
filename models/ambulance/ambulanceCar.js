@@ -34,5 +34,6 @@ const ambulanceCarSchema = new mongoose.Schema({
     default: "not assgine",
   },
 });
+ambulanceCarSchema.index({ "lastLocation.coordinates": "2dsphere" });
 
 module.exports = mongoose.model("AmbulanceCar", ambulanceCarSchema);

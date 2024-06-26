@@ -4,11 +4,13 @@ const MongoStore = require("connect-mongo");
 const path = require("path");
 const bodyParser = require("body-parser");
 const promisify = require("es6-promisify");
+const http = require("http");
+const socketIo = require("socket.io");
+const apiRouter = require("./routes/api");
+const authApiRouter = require("./routes/auth");
+const { initializeSocketServer } = require("./socketServer"); // Import the socket server initializer
 
- const apiRouter = require("./routes/api");
- const authApiRouter = require("./routes/auth");
-
- const errorHandlers = require("./handlers/errorHandlers");
+const errorHandlers = require("./handlers/errorHandlers");
 
 const { isValidToken } = require("./controllers/authController");
 
@@ -16,11 +18,12 @@ require("dotenv").config({ path: ".env" });
 
 // create our Express app
 const app = express();
+const server = http.createServer(app);
+const io = initializeSocketServer(server);
 
-// serves up static files from the public folder. Anything in public/ will just be served up as the file it is
+
 app.use(express.static(path.join(__dirname, "public")));
 
-// Takes the raw requests and turns them into usable properties on req.body
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
@@ -66,15 +69,15 @@ app.use(function (req, res, next) {
   }
 });
 
-  app.use("/api", authApiRouter);
+app.use("/api", authApiRouter);
 
 // // for development & production don't use this line app.use("/api", apiRouter); , this is just demo login contoller
 
 // //uncomment line below // app.use("/api", isValidToken, apiRouter);
- app.use("/api", isValidToken, apiRouter);
+app.use("/api", isValidToken, apiRouter);
 
 // // If that above routes didnt work, we 404 them and forward to error handler
- app.use(errorHandlers.notFound);
+app.use(errorHandlers.notFound);
 
 // // Otherwise this was a really bad error we didn't expect! Shoot eh
 if (app.get("env") === "development") {
@@ -86,4 +89,4 @@ if (app.get("env") === "development") {
 app.use(errorHandlers.productionErrors);
 
 // done! we export it so we can start the site in start.js
-module.exports = app;
+module.exports = { app, io, server };

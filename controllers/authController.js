@@ -5,6 +5,7 @@ const mongoose = require("mongoose");
 
 const Admin = mongoose.model("Admin");
 const Driver = mongoose.model("Driver");
+const Owner = mongoose.model("Owner");
 
 require("dotenv").config({ path: ".env" });
 
@@ -67,7 +68,16 @@ exports.login = async (req, res) => {
       return res.status(400).json({ msg: "Not all fields have been entered." });
 
     // Check user type based on role
-    const User = role === "Driver" ? Driver : Admin;
+    const User =
+      role === "Driver"
+        ? Driver
+        : role === "Admin"
+        ? Admin
+        : role === "Owner"
+        ? Owner
+        : (() => {
+            throw new Error("Invalid role");
+          })();
 
     // Find user by email
     const user = await User.findOne({ email });
@@ -94,8 +104,7 @@ exports.login = async (req, res) => {
       {
         exp: Math.floor(Date.now() / 1000) + 60 * 60 * 24,
         id: user._id,
-        role: role 
-
+        role: role,
       },
       process.env.JWT_SECRET
     );
@@ -121,7 +130,9 @@ exports.login = async (req, res) => {
       },
       message: `Successfully login ${role.toLowerCase()}`,
     };
-
+    if (role === "Owner") {
+      response.result.admin.hospitalId = result.hospital;
+    }
     res.json(response);
   } catch (err) {
     res
@@ -150,53 +161,64 @@ exports.isValidToken = async (req, res, next) => {
         jwtExpired: true,
       });
 
-      let user = null;
-      if (verified.role === 'Admin') {
-        user = await Admin.findOne({ _id: verified.id });
-        if (!user)
-          return res.status(401).json({
-            success: false,
-            result: null,
-            message: "Admin doesn't exist, authorization denied.",
-            jwtExpired: true,
-          });
-      } else if (verified.role === 'Driver') {
-        user = await Driver.findOne({ _id: verified.id });
-        if (!user)
-          return res.status(401).json({
-            success: false,
-            result: null,
-            message: "Driver doesn't exist, authorization denied.",
-            jwtExpired: true,
-          });
-      } else {
+    let user = null;
+    if (verified.role === "Admin") {
+      req.role = "Admin";
+      user = await Admin.findOne({ _id: verified.id });
+      if (!user)
         return res.status(401).json({
           success: false,
           result: null,
-          message: "Invalid role, authorization denied.",
+          message: "Admin doesn't exist, authorization denied.",
           jwtExpired: true,
         });
-      }
-  
-      if (user.isLoggedIn === false)
+    } else if (verified.role === "Driver") {
+      user = await Driver.findOne({ _id: verified.id });
+      if (!user)
         return res.status(401).json({
           success: false,
           result: null,
-          message: `${verified.role} is already logged out, try to login again, authorization denied.`,
+          message: "Driver doesn't exist, authorization denied.",
           jwtExpired: true,
         });
-  
-      req.user = user; // Attach the user to the request object
-      next();
-    } catch (err) {
-      res.status(500).json({
+    } else if (verified.role === "Owner") {
+      req.role = "Owner";
+      user = await Owner.findOne({ _id: verified.id });
+      if (!user)
+        return res.status(401).json({
+          success: false,
+          result: null,
+          message: "Owner OF Hospital doesn't exist, authorization denied.",
+          jwtExpired: true,
+        });
+    } else {
+      return res.status(401).json({
         success: false,
         result: null,
-        message: err.message,
+        message: "Invalid role, authorization denied.",
         jwtExpired: true,
       });
     }
-  };
+
+    if (user.isLoggedIn === false)
+      return res.status(401).json({
+        success: false,
+        result: null,
+        message: `${verified.role} is already logged out, try to login again, authorization denied.`,
+        jwtExpired: true,
+      });
+
+    req.user = user; // Attach the user to the request object
+    next();
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      result: null,
+      message: err.message,
+      jwtExpired: true,
+    });
+  }
+};
 exports.logout = async (req, res) => {
   const result = await Admin.findOneAndUpdate(
     { _id: req.admin._id },
@@ -209,11 +231,33 @@ exports.logout = async (req, res) => {
   res.status(200).json({ isLoggedIn: result.isLoggedIn });
 };
 exports.isDriver = (req, res, next) => {
-  if (req.user.role !== 'Driver') {
+  console.log(req.user)
+  if (req.user.role !== "Driver") {
     return res.status(403).json({
       success: false,
       result: null,
       message: "Access denied. Only drivers are allowed to access this route.",
+    });
+  }
+  next();
+};
+exports.IsAdmin = (req, res, next) => {
+  if (req.role !== "Admin") {
+    return res.status(403).json({
+      success: false,
+      result: null,
+      message: "Access denied. Only Admin are allowed to access this route.",
+    });
+  }
+  next();
+};
+exports.Is_admin_hospital = (req, res, next) => {
+  if (req.role !== "Owner") {
+    return res.status(403).json({
+      success: false,
+      result: null,
+      message:
+        "Access denied. Only hospital Admin are allowed to access this route.",
     });
   }
   next();
