@@ -9,7 +9,7 @@
     "production": "NODE_ENV=production",
     "setup": "node ./setup/setup.js"
   },"engines": {
-    "node": "14.17.6"
+    "node": "20.13.1"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
