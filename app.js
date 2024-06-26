@@ -70,9 +70,7 @@ app.use(function (req, res, next) {
     return next();
   }
 });
-app.use("/", (req, res) => {
-  res.send("hello");
-});
+
 
 
 app.use("/api", authApiRouter);
@@ -90,7 +88,9 @@ if (app.get("env") === "development") {
   /* Development Error Handler - Prints stack trace */
   app.use(errorHandlers.developmentErrors);
 }
-
+app.use("/", (req, res) => {
+  res.send("hello");
+});
 // // production error handler
 app.use(errorHandlers.productionErrors);
 
