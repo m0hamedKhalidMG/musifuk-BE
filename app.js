@@ -10,6 +10,8 @@ const apiRouter = require("./routes/api");
 const authApiRouter = require("./routes/auth");
 const { initializeSocketServer } = require("./socketServer"); // Import the socket server initializer
 require('./models/ambulance/driver.js'); 
+require('./models/ambulance/ambulanceCar.js'); 
+
 const errorHandlers = require("./handlers/errorHandlers");
 
 const { isValidToken } = require("./controllers/authController");
