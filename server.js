@@ -3,6 +3,7 @@ const mongoose = require("mongoose");
 require("dotenv").config({ path: ".env" });
 require('./models/ambulance/driver.js'); 
 require('./models/ambulance/ambulanceCar.js'); 
+require('./models/ambulance/requestsCar.js'); 
 
 // Connect to our Database and handle any bad connections
 // mongoose.connect(process.env.DATABASE);
