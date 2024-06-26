@@ -2,6 +2,7 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 
 const mongoose = require("mongoose");
+const Admin = mongoose.model("Admin");
 
 const Driver = mongoose.model("Driver");
 const Owner = mongoose.model("Owner");
