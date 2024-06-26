@@ -6,6 +6,7 @@ require('./models/ambulance/ambulanceCar.js');
 require('./models/ambulance/requestsCar.js'); 
 require('./models/ambulance/describleState.js'); 
 require('./models/hospital/Owner.js'); 
+require('./models/hospital/Admin.js'); 
 
 require('./models/hospital/Hospitals.js'); 
 require('./models/hospital/patientAssignment.js'); 
