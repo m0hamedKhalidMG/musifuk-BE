@@ -1,4 +1,4 @@
-const Pusher = require("pusher");
+const Pushee = require("pusher");
 const mongoose = require("mongoose");
 const Driver = mongoose.model("Driver");
 const AmbulanceCar = mongoose.model("AmbulanceCar");
@@ -8,7 +8,7 @@ const RequestsCar = mongoose.model("RequestsCar");
 let pusher;
 
 function initializePusher() {
-  pusher = new Pusher({
+  pusher = new Pushee({
     appId: "1826287",
     key: "ea80cde6e77453dc1bf5",
     secret: "c60a75a7c8986c98f0a5",
