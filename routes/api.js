@@ -127,11 +127,13 @@ router
   .delete(catchErrors(RequestsController.deleteAmbulanceRequest));
 
 ///////////driverProfile/////////
+router.get('/requests',_authController.isDriver, RequestsController.getAllRequestsByAssignedCar);
 
 router
   .route("/ambulance/driverProfile")
   .all(_authController.isDriver)
   .get(catchErrors(profileDriver.getDriverDetails));
+
 
 router
   .route("/ambulance/driver/requestscars/:carId")
