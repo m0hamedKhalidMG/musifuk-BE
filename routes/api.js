@@ -148,7 +148,7 @@ router
 
   .put(profileDriver.updatedeliverystatus);
 router
-  .route("/update-last-location/:carId")
+  .route("/update-last-location")
   .all(_authController.isDriver)
   .put(profileDriver.updateLastLocation);
 router
