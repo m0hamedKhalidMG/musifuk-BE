@@ -4,42 +4,59 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ambulance Tracker</title>
-    <script src="https://cdn.socket.io/4.0.1/socket.io.min.js"></script>
+    <script src="https://js.pusher.com/7.0/pusher.min.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            const socket = io('http://localhost:8888'); // Adjust URL to match your server
+            // Initialize Pusher
+            const pusher = new Pusher('ea80cde6e77453dc1bf5', {
+                cluster: 'mt1',
+                encrypted: true,
+            });
+            const newassignment = '663ead9aa437ca4ad0c62eea'; // Replace with your car number
 
-            socket.on('connect', () => {
-                console.log('Connected to server');
-             
-                // Join a room specific to your ambulance car (replace 'carNumber' with actual car number)
-                const carNumber = 'ABC123';
-                socket.emit('joinRoom', `car_${carNumber}`);
-            //     setInterval(() => {
+            const carNumber = 'CAR001'; // Replace with your car number
+            const channel = pusher.subscribe(`car_${carNumber}`);
+            const channel2 = pusher.subscribe(`car_${newassignment}`);
+            channel2.bind('newassignment', (data) => {
+                console.log('newassignment:', data);
+                // Handle the updated position data as needed
+            });
 
-            //     // Example of sending position updates
-            //         const newCoordinates =  [-79.005972, 4.712776];
-            //         socket.emit('updatePosition', { carNumber, newCoordinates });
-            
-            //     }, 5000);
-             });
-
-            socket.on('lastLocation', (data) => {
-      console.log('Last known location received:', data.coordinates);
-      // Handle displaying the last known location on the UI
-    });
-            socket.on('positionUpdated', (data) => {
+            channel2.bind('pusher:subscription_succeeded', () => {
+                console.log('Subscribed to channel');
+            });
+            channel.bind('positionUpdated', (data) => {
                 console.log('Position updated:', data);
-                // Handle displaying the updated position on the UI
+                // Handle the updated position data as needed
             });
 
-            socket.on('error', (error) => {
-                console.error('Error:', error);
+            channel.bind('pusher:subscription_succeeded', () => {
+                console.log('Subscribed to channel');
             });
 
-            socket.on('disconnect', () => {
-                console.log('Disconnected from server');
-            });
+            // Example of updating position (simulated, as the client cannot trigger Pusher events)
+            function sendUpdatePosition(newCoordinates) {
+                fetch('http://localhost:8888/api/update-last-location', {
+                    method: 'PUT',
+                    headers: {
+    'x-auth-token': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3MTk2NjQ0MTAsImlkIjoiNjY0Yjk4ZWI1MTcwYTIyZThjMTkxM2JjIiwicm9sZSI6IkRyaXZlciIsImlhdCI6MTcxOTU3ODAxMH0.4hV9MDnaSmAXzxcxbbwtc_n77sLTlSfbv3VD3lWtqWI',
+    'Content-Type': 'application/json'
+  },
+                    body: JSON.stringify({  newCoordinates })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Server response:', data);
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+            }
+            // Example usage of sendUpdatePosition
+        //    setInterval(() => {
+                const newCoordinates = [-79.005972, 4.712776];
+                sendUpdatePosition(newCoordinates);
+            //}, 5000);
         });
     </script>
 </head>

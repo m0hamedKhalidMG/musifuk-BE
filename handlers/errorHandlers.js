@@ -32,7 +32,7 @@ exports.catchErrors = (fn) => {
         "<mark>$&</mark>"
       ),
     };
-  
+  console.log(err)
     res.status(500).json({
       success: false,
       message: "Oops ! Error in Server",

@@ -39,7 +39,7 @@ exports.getRequestsByCar = async (req, res) => {
 };
 exports.updateCarStatus = async (req, res) => {
   const { carId, status } = req.body;
-
+console.log(req.user)
   // Validate the status
   const validStatuses = ["available", "busy", "out of service"];
   if (!validStatuses.includes(status)) {
@@ -112,10 +112,15 @@ exports.updatedeliverystatus = async (req, res) => {
 }; //carId, newCoordinates, newTimestamp
 exports.updateLastLocation = async (req, res) => {
   try {
-    const { carId } = req.params;
 
-    const ambulanceCar = await AmbulanceCar.findById(carId);
+    if (!req.user || !req.user._id) {
+      throw new Error("User not authenticated or missing user ID");
+    }
 
+    const ambulanceCar = await AmbulanceCar.findOne({ assignedDriver: req.user._id });
+
+
+    console.log(ambulanceCar)
     if (!ambulanceCar) {
       throw new Error("Car not found in the AmbulanceCar collection");
     }

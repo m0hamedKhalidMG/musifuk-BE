@@ -11,6 +11,7 @@ const hospitalController = require("../controllers/hospitalController");
 const driverController = require("../controllers/ambulance/driverController");
 const ambulanceController = require("../controllers/ambulance/CarController");
 const _authController = require("../controllers/authController");
+const { updatePosition ,assignCarToRequest} = require("./../socketServer"); // Import the Pusher initializer
 
 ////////////////adminController//////////////////////////
 
@@ -141,7 +142,7 @@ router
   .route("/ambulance/requestscar")
   .get(catchErrors(RequestsController.getAmbulanceRequests))
   .post(RequestsController.createAmbulanceRequest)
-  .patch(RequestsController.assignCarToRequest);
+  .patch(assignCarToRequest);
 
 router
   .route("/ambulance/request/markPatientsAsDelivered")
@@ -164,7 +165,7 @@ router
   .route("/ambulance/driver/requestscars/:carId")
   .all(_authController.isDriver)
   .get(catchErrors(profileDriver.getRequestsByCar));
-
+router.get('/requests',_authController.isDriver, RequestsController.getAllRequestsByAssignedCar);
 router
   .route("/ambulance/CarStatus")
   .all(_authController.isDriver)
@@ -175,9 +176,9 @@ router
 
   .put(profileDriver.updatedeliverystatus);
 router
-  .route("/update-last-location/:carId")
+  .route("/update-last-location")
   .all(_authController.isDriver)
-  .put(profileDriver.updateLastLocation);
+  .put(updatePosition);
 router
   .route("/describe-sate")
   .all(_authController.isDriver)
