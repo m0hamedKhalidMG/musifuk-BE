@@ -265,3 +265,24 @@ exports.assignHospitalToPatient = async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 };
+exports.getAllRequestsByAssignedCar = async (req, res) => {
+ 
+    try {
+
+      if (!req.user || !req.user._id) {
+        throw new Error("User not authenticated or missing user ID");
+      }
+  
+      const ambulanceCar = await AmbulanceCar.findOne({ assignedDriver: req.user._id });
+    const requests = await RequestsCar.find({ assignedCars: { $in: [ambulanceCar._id] } }).populate('assignedCars').populate('assignedHospital');
+
+    if (requests.length === 0) {
+      return res.status(404).json({ message: "No requests found for the assigned car" });
+    }
+
+    return res.json(requests);
+  } catch (error) {
+    console.error("Error retrieving requests:", error);
+    return res.status(500).json({ error: error.message });
+  }
+};
