@@ -11,6 +11,8 @@ const authApiRouter = require("./routes/auth");
 const { initializeSocketServer } = require("./socketServer"); // Import the socket server initializer
 require('./models/ambulance/driver.js'); 
 require('./models/ambulance/ambulanceCar.js'); 
+const { initializePusher } = require("./socketServer"); // Import the Pusher initializer
+const cors = require("cors");
 
 const errorHandlers = require("./handlers/errorHandlers");
 
@@ -21,8 +23,10 @@ require("dotenv").config({ path: ".env" });
 // create our Express app
 const app = express();
 const server = http.createServer(app);
-const io = initializeSocketServer(server);
+app.use(cors()); // Enable CORS for all routes
 
+// Initialize Pusher and get the io instance
+const pusher = initializePusher();
 
 app.use(express.static(path.join(__dirname, "public")));
 
