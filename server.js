@@ -33,10 +33,10 @@ const path = require("path");
  });
 
 // Start our app!
-const { app, server } = require("./app");
+const app  = require("./app");
 
 app.set("port", process.env.PORT || 80);
-server.listen(app.get("port"), () => {
+const server = app.listen(app.get("port"), () => {
   console.log(`Express running → On PORT : ${server.address().port}`);
 });
 
