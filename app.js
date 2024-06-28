@@ -3,38 +3,30 @@ const session = require("express-session");
 const MongoStore = require("connect-mongo");
 const path = require("path");
 const bodyParser = require("body-parser");
-const promisify = require("es6-promisify");
 const http = require("http");
-const socketIo = require("socket.io");
+const { initializePusher } = require("./socketServer"); // Import the Pusher initializer
 const apiRouter = require("./routes/api");
 const authApiRouter = require("./routes/auth");
-const { initializeSocketServer } = require("./socketServer"); // Import the socket server initializer
-require('./models/ambulance/driver.js'); 
-require('./models/ambulance/ambulanceCar.js'); 
-const { initializePusher } = require("./socketServer"); // Import the Pusher initializer
-const cors = require("cors");
-
 const errorHandlers = require("./handlers/errorHandlers");
-
 const { isValidToken } = require("./controllers/authController");
-
 require("dotenv").config({ path: ".env" });
+const cors = require("cors");
+const promisify = require("es6-promisify");
 
-// create our Express app
+// Create our Express app
 const app = express();
 const server = http.createServer(app);
 app.use(cors()); // Enable CORS for all routes
 
 // Initialize Pusher and get the io instance
-const pusher = initializePusher();
+const pusher = initializePusher(); // Initialize Pusher
 
+// Middleware setup
 app.use(express.static(path.join(__dirname, "public")));
-
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-// Sessions allow us to Contact data on visitors from request to request
-// This keeps admins logged in and allows us to send flash messages
+// Sessions configuration
 app.use(
   session({
     secret: process.env.SECRET,
@@ -45,21 +37,21 @@ app.use(
   })
 );
 
-// pass variables to our templates + all requests
+// Middleware to pass variables to templates and requests
 app.use((req, res, next) => {
   res.locals.admin = req.admin || null;
   res.locals.currentPath = req.path;
   next();
 });
 
-// promisify some callback based APIs
+// Promisify some callback-based APIs
 app.use((req, res, next) => {
   req.login = promisify(req.login, req);
   next();
 });
 
-// Here our API Routes
-app.use(function (req, res, next) {
+// CORS headers
+app.use((req, res, next) => {
   res.header("Access-Control-Allow-Origin", "*");
   res.header("Access-Control-Allow-Credentials", "true");
   res.header("Access-Control-Allow-Methods", "GET,PATCH,PUT,POST,DELETE");
@@ -75,28 +67,21 @@ app.use(function (req, res, next) {
   }
 });
 
-
-
+// API routes
 app.use("/api", authApiRouter);
-
-// // for development & production don't use this line app.use("/api", apiRouter); , this is just demo login contoller
-
-// //uncomment line below // app.use("/api", isValidToken, apiRouter);
 app.use("/api", isValidToken, apiRouter);
 
-// // If that above routes didnt work, we 404 them and forward to error handler
+// Handle 404 errors
 app.use(errorHandlers.notFound);
 
-// // Otherwise this was a really bad error we didn't expect! Shoot eh
+// Development error handler
 if (app.get("env") === "development") {
-  /* Development Error Handler - Prints stack trace */
   app.use(errorHandlers.developmentErrors);
 }
-app.use("/", (req, res) => {
-  res.send("hello");
-});
-// // production error handler
+
+// Production error handler
 app.use(errorHandlers.productionErrors);
 
-// done! we export it so we can start the site in start.js
-module.exports = { app, io, server };
+// Start the server
+
+module.exports = app;
