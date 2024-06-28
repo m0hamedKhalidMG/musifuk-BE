@@ -3,6 +3,7 @@ const { catchErrors } = require("../handlers/errorHandlers");
 
 const router = express.Router();
 
+const adminController = require("../controllers/adminController");
 const profileDriver = require("../controllers/ambulance/profiledriver/ProfileDriverController");
 const RequestsController = require("../controllers/ambulance/RequestsController");
 const hospitalController = require("../controllers/hospitalController");
@@ -10,12 +11,39 @@ const hospitalController = require("../controllers/hospitalController");
 const driverController = require("../controllers/ambulance/driverController");
 const ambulanceController = require("../controllers/ambulance/CarController");
 const _authController = require("../controllers/authController");
+const { updatePosition ,assignCarToRequest} = require("./../socketServer"); // Import the Pusher initializer
 
 ////////////////adminController//////////////////////////
 
+router
+  .route("/admin/create")
+  .all(_authController.IsAdmin)
+  .post(catchErrors(adminController.create));
+router
+  .route("/admin/read/:id")
+  .all(_authController.IsAdmin)
+  .get(catchErrors(adminController.read));
+router
+  .route("/admin/update/:id")
+  .all(_authController.IsAdmin)
+  .patch(catchErrors(adminController.update));
+router
+  .route("/admin/delete/:id")
+  .all(_authController.IsAdmin)
+  .delete(catchErrors(adminController.delete));
+router
+  .route("/admin/search")
+  .all(_authController.IsAdmin)
+  .get(catchErrors(adminController.search));
+router
+  .route("/admin/list")
+  .all(_authController.IsAdmin)
+  .get(catchErrors(adminController.list));
 
-
-
+router
+  .route("/admin/password-update/:id")
+  .all(_authController.IsAdmin)
+  .patch(catchErrors(adminController.updatePassword));
 
 ////////////////ambulance driver Controller//////////////////////////
 
@@ -114,7 +142,7 @@ router
   .route("/ambulance/requestscar")
   .get(catchErrors(RequestsController.getAmbulanceRequests))
   .post(RequestsController.createAmbulanceRequest)
-  .patch(RequestsController.assignCarToRequest);
+  .patch(assignCarToRequest);
 
 router
   .route("/ambulance/request/markPatientsAsDelivered")
@@ -127,19 +155,17 @@ router
   .delete(catchErrors(RequestsController.deleteAmbulanceRequest));
 
 ///////////driverProfile/////////
-router.get('/requests',_authController.isDriver, RequestsController.getAllRequestsByAssignedCar);
 
 router
   .route("/ambulance/driverProfile")
   .all(_authController.isDriver)
   .get(catchErrors(profileDriver.getDriverDetails));
 
-
 router
   .route("/ambulance/driver/requestscars/:carId")
   .all(_authController.isDriver)
   .get(catchErrors(profileDriver.getRequestsByCar));
-
+router.get('/requests',_authController.isDriver, RequestsController.getAllRequestsByAssignedCar);
 router
   .route("/ambulance/CarStatus")
   .all(_authController.isDriver)
@@ -152,7 +178,7 @@ router
 router
   .route("/update-last-location")
   .all(_authController.isDriver)
-  .put(profileDriver.updateLastLocation);
+  .put(updatePosition);
 router
   .route("/describe-sate")
   .all(_authController.isDriver)
