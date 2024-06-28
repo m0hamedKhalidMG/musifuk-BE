@@ -111,10 +111,13 @@ exports.updatedeliverystatus = async (req, res) => {
   }
 }; //carId, newCoordinates, newTimestamp
 exports.updateLastLocation = async (req, res) => {
-  try {
-    const { carId } = req.params;
+try {
 
-    const ambulanceCar = await AmbulanceCar.findById(carId);
+    if (!req.user || !req.user._id) {
+      throw new Error("User not authenticated or missing user ID");
+    }
+
+    const ambulanceCar = await AmbulanceCar.findOne({ assignedDriver: req.user._id });
 
     if (!ambulanceCar) {
       throw new Error("Car not found in the AmbulanceCar collection");
