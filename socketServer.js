@@ -95,9 +95,22 @@ async function updatePosition(req, res) {
     throw error;
   }
 }
+async function createAmbulanceRequest  (req, res)  {
+  try {
+    const newRequest = await RequestsCar.create(req.body);
 
+    pusher.trigger("newRequestCar-channel", "newRequestCar", newRequest); // Emit event using Pusher
+
+    res.status(201).json(newRequest);
+  } catch (error) {
+    console.error("Error creating ambulance request:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+};
 module.exports = {
   initializePusher,
   updatePosition,
   assignCarToRequest,
+  createAmbulanceRequest
 };
+
