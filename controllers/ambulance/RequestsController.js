@@ -168,11 +168,12 @@ exports.filterHospitals = async (req, res) => {
     let query = {};
 
     if (departments && departments.length > 0) {
+      
       query["departments"] = {
         $all: departments.map((dept) => ({
           $elemMatch: {
             name: dept.name,
-            numberOfBeds: { $gte: dept.minBeds },
+            available: { $gte: dept.minBeds },
           },
         })),
       };
