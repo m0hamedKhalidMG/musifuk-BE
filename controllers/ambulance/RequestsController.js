@@ -168,11 +168,12 @@ exports.filterHospitals = async (req, res) => {
     let query = {};
 
     if (departments && departments.length > 0) {
+      
       query["departments"] = {
         $all: departments.map((dept) => ({
           $elemMatch: {
             name: dept.name,
-            numberOfBeds: { $gte: dept.minBeds },
+            available: { $gte: dept.minBeds },
           },
         })),
       };
@@ -274,8 +275,12 @@ exports.getAllRequestsByAssignedCar = async (req, res) => {
       }
   
       const ambulanceCar = await AmbulanceCar.findOne({ assignedDriver: req.user._id });
-    const requests = await RequestsCar.find({ assignedCars: { $in: [ambulanceCar._id] } }).populate('assignedCars').populate('assignedHospital');
-
+      const requests = await RequestsCar.find({
+        assignedCars: { $in: [ambulanceCar._id] },
+        state: "label created"
+      })
+      .populate('assignedCars')
+      .populate('assignedHospital');
     if (requests.length === 0) {
       return res.status(404).json({ message: "No requests found for the assigned car" });
     }

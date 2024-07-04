@@ -1,9 +1,7 @@
 const Pusher = require("pusher");
 const mongoose = require("mongoose");
-const Driver = mongoose.model("Driver");
 const AmbulanceCar = mongoose.model("AmbulanceCar");
 const RequestsCar = mongoose.model("RequestsCar");
-
 
 let pusher;
 
@@ -18,7 +16,8 @@ function initializePusher() {
 
   return pusher;
 }
-async function assignCarToRequest  (req, res)  {
+
+async function assignCarToRequest(req, res) {
   const { requestId, carIds } = req.body;
   const cars = await AmbulanceCar.find({ _id: { $in: carIds } });
   if (cars.length !== carIds.length) {
@@ -46,29 +45,30 @@ async function assignCarToRequest  (req, res)  {
     { $set: { status: "busy", deliveryStatus: "on progress" } }
   );
 
-
   carIds.forEach((carId) => {
     pusher.trigger(`car_${carId}`, "newassignment", {
       message: "You have a new assignment",
       request: updatedRequest,
     });
   });
-  res.json(updatedRequest);
-};
-async function updatePosition(req,res) {
-  try {
 
+  res.json(updatedRequest);
+}
+
+async function updatePosition(req, res) {
+  try {
     if (!req.user || !req.user._id) {
       throw new Error("User not authenticated or missing user ID");
     }
 
-    const ambulanceCar = await AmbulanceCar.findOne({ assignedDriver: req.user._id });
+    const ambulanceCar = await AmbulanceCar.findOne({
+      assignedDriver: req.user._id,
+    });
 
-
-    console.log(ambulanceCar)
     if (!ambulanceCar) {
       throw new Error("Car not found in the AmbulanceCar collection");
     }
+
     const { newCoordinates, newTimestamp } = req.body;
     if (
       !Array.isArray(newCoordinates) ||
@@ -77,24 +77,39 @@ async function updatePosition(req,res) {
     ) {
       throw new Error("newCoordinates must be an array of two numbers");
     }
+
     ambulanceCar.lastLocation.coordinates.coordinates = newCoordinates;
     ambulanceCar.lastLocation.timestamp = newTimestamp;
 
     await ambulanceCar.save();
-    const carNumber=ambulanceCar.carNumber
+
+    const carNumber = ambulanceCar.carNumber;
     pusher.trigger(`car_${carNumber}`, "positionUpdated", {
       message: "Position updated",
       coordinates: newCoordinates,
     });
+
     return res.json({ message: "last location updated successfully" });
   } catch (error) {
     console.error("Error updating last location:", error);
     throw error;
   }
-};
+}
+async function createAmbulanceRequest  (req, res)  {
+  try {
+    const newRequest = await RequestsCar.create(req.body);
 
+    pusher.trigger("newRequestCar-channel", "newRequestCar", newRequest); // Emit event using Pusher
+
+    res.status(201).json(newRequest);
+  } catch (error) {
+    console.error("Error creating ambulance request:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+};
 module.exports = {
   initializePusher,
   updatePosition,
-  assignCarToRequest
+  assignCarToRequest,
+  createAmbulanceRequest
 };

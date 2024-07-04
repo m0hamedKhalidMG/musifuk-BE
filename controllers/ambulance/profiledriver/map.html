@@ -14,9 +14,18 @@
             });
             const newassignment = '663ead9aa437ca4ad0c62eea'; // Replace with your car number
 
-            const carNumber = 'CAR001'; // Replace with your car number
+            const carNumber = 'ABC123'; // Replace with your car number
             const channel = pusher.subscribe(`car_${carNumber}`);
             const channel2 = pusher.subscribe(`car_${newassignment}`);
+            const channel3 = pusher.subscribe("newRequestCar-channel");
+            channel3.bind('newRequestCar', (data) => {
+                console.log('newRequestCar:', data);
+                // Handle the updated position data as needed
+            });
+
+            channel3.bind('pusher:subscription_succeeded', () => {
+                console.log('Subscribed to channel');
+            });
             channel2.bind('newassignment', (data) => {
                 console.log('newassignment:', data);
                 // Handle the updated position data as needed
@@ -35,28 +44,28 @@
             });
 
             // Example of updating position (simulated, as the client cannot trigger Pusher events)
-            function sendUpdatePosition(newCoordinates) {
-                fetch('http://localhost:8888/api/update-last-location', {
-                    method: 'PUT',
-                    headers: {
-    'x-auth-token': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3MTk2NjQ0MTAsImlkIjoiNjY0Yjk4ZWI1MTcwYTIyZThjMTkxM2JjIiwicm9sZSI6IkRyaXZlciIsImlhdCI6MTcxOTU3ODAxMH0.4hV9MDnaSmAXzxcxbbwtc_n77sLTlSfbv3VD3lWtqWI',
-    'Content-Type': 'application/json'
-  },
-                    body: JSON.stringify({  newCoordinates })
-                })
-                .then(response => response.json())
-                .then(data => {
-                    console.log('Server response:', data);
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                });
-            }
-            // Example usage of sendUpdatePosition
-        //    setInterval(() => {
-                const newCoordinates = [-79.005972, 4.712776];
-                sendUpdatePosition(newCoordinates);
-            //}, 5000);
+//             function sendUpdatePosition(newCoordinates) {
+//                 fetch('https://musifuk-be.vercel.app/api/update-last-location', {
+//                     method: 'PUT',
+//                     headers: {
+//     'x-auth-token': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3MTk2NjQ0MTAsImlkIjoiNjY0Yjk4ZWI1MTcwYTIyZThjMTkxM2JjIiwicm9sZSI6IkRyaXZlciIsImlhdCI6MTcxOTU3ODAxMH0.4hV9MDnaSmAXzxcxbbwtc_n77sLTlSfbv3VD3lWtqWI',
+//     'Content-Type': 'application/json'
+//   },
+//                     body: JSON.stringify({  newCoordinates })
+//                 })
+//                 .then(response => response.json())
+//                 .then(data => {
+//                     console.log('Server response:', data);
+//                 })
+//                 .catch(error => {
+//                     console.error('Error:', error);
+//                 });
+//             }
+//             // Example usage of sendUpdatePosition
+//         //    setInterval(() => {
+//                 const newCoordinates = [-79.005972, 4.712776];
+//                 sendUpdatePosition(newCoordinates);
+//             //}, 5000);
         });
     </script>
 </head>

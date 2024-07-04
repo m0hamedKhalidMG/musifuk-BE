@@ -65,14 +65,16 @@ exports.addnewpatient = async (req, res) => {
     }
 
     const departmentInfo = hospital.departments[departmentIndex];
-    if (departmentInfo.numberOfBeds <= 0) {
+    if (departmentInfo.numberOfBeds <= departmentInfo.consumed) {
       return res
         .status(400)
         .json({ message: `No available beds in department '${department}'` });
     }
 
-    departmentInfo.numberOfBeds -= 1;
+    departmentInfo.consumed += 1;
+    departmentInfo.available =departmentInfo.numberOfBeds - departmentInfo.consumed;
 
+console.log( departmentInfo.consumed)
     // if (serumsNeeded && serumsNeeded.length > 0) {
     //   serumsNeeded.forEach(serum => {
     //     const serumIndex = hospital.serumsAndVaccines.findIndex(s => s.name === serum);

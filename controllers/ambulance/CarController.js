@@ -78,7 +78,7 @@ exports.getNearestAvailableCars = async (req, res) => {
     }
 
     const pickupLocation = request.pickupLocation.coordinates;
-
+console.log(pickupLocation)
     // Find all available ambulance cars sorted by their distance to the pickup location
     const availableCars = await AmbulanceCar.aggregate([
       {

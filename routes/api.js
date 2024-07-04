@@ -11,7 +11,7 @@ const hospitalController = require("../controllers/hospitalController");
 const driverController = require("../controllers/ambulance/driverController");
 const ambulanceController = require("../controllers/ambulance/CarController");
 const _authController = require("../controllers/authController");
-const { updatePosition ,assignCarToRequest} = require("./../socketServer"); // Import the Pusher initializer
+const { updatePosition,createAmbulanceRequest,assignCarToRequest} = require("./../socketServer"); // Import the Pusher initializer
 
 ////////////////adminController//////////////////////////
 
@@ -141,7 +141,7 @@ router.get(
 router
   .route("/ambulance/requestscar")
   .get(catchErrors(RequestsController.getAmbulanceRequests))
-  .post(RequestsController.createAmbulanceRequest)
+  .post(createAmbulanceRequest)
   .patch(assignCarToRequest);
 
 router
