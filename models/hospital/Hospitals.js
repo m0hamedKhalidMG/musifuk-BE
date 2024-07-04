@@ -8,6 +8,13 @@ const hospitalSchema = new mongoose.Schema({
     {
       name: { type: String, required: true },
       numberOfBeds: { type: Number, required: true },
+      consumed: {
+        type: Number,
+        default: 0
+      },
+      available: { type: Number, default: function() {
+        return this.numberOfBeds; // Set default to numberOfBeds
+      }},
       createdAt: {
         type: Date,
         default: Date.now,
