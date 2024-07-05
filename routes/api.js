@@ -127,6 +127,8 @@ router.post(
   hospitalController.addnewpatient
 );
 ////////////////requestcarController//////////////////////////
+router.put("/cancel-request/:requestId", RequestsController.cancelRequest);
+
 router.get(
   "/getAllDescribeSate",
   _authController.IsAdmin,
