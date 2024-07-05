@@ -45,9 +45,13 @@ exports.assignCarToRequest = async (req, res) => {
 
   const updatedRequest = await RequestsCar.findByIdAndUpdate(
     requestId,
-    { $push: { assignedCars: { $each: carIds } } },
-    { new: true }
-  ).populate("assignedCars");
+   {
+    $push: { assignedCars: { $each: carIds } },
+    $set: { state: "in progress" }
+  },
+  { new: true }
+).populate("assignedCars");
+console.log("Updated Request:", updatedRequest);
 
   if (!updatedRequest) {
     return res.status(404).json({ error: "Ambulance request not found" });
@@ -288,6 +292,46 @@ exports.getAllRequestsByAssignedCar = async (req, res) => {
     return res.json(requests);
   } catch (error) {
     console.error("Error retrieving requests:", error);
+    return res.status(500).json({ error: error.message });
+  }
+};
+
+
+exports.cancelRequest = async (req, res) => {
+  const { requestId } = req.params;
+
+  try {
+    // Find the request to get the list of assigned cars
+    const request = await RequestsCar.findById(requestId).populate("assignedCars");
+
+    if (!request) {
+      return res.status(404).json({ message: "Request not found" });
+    }
+
+    const assignedCars = request.assignedCars;
+
+    // Update each assigned car to become available
+    for (const car of assignedCars) {
+      await AmbulanceCar.findByIdAndUpdate(car._id, {
+        $set: { state: "available" }
+      });
+    }
+
+    // Clear assigned cars and set request state to cancelled
+    const updatedRequest = await RequestsCar.findByIdAndUpdate(
+      requestId,
+      {
+        $set: {
+          assignedCars: [],
+          state: "cancelled"
+        }
+      },
+      { new: true }
+    ).populate("assignedCars");
+
+    return res.json(updatedRequest);
+  } catch (error) {
+    console.error("Error cancelling request:", error);
     return res.status(500).json({ error: error.message });
   }
 };
