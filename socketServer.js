@@ -32,7 +32,10 @@ async function assignCarToRequest(req, res) {
 
   const updatedRequest = await RequestsCar.findByIdAndUpdate(
     requestId,
-    { $push: { assignedCars: { $each: carIds } } },
+    {
+      $push: { assignedCars: { $each: carIds } },
+      $set: { state: "in progress" }
+    },
     { new: true }
   ).populate("assignedCars");
 
@@ -113,4 +116,3 @@ module.exports = {
   assignCarToRequest,
   createAmbulanceRequest
 };
-
