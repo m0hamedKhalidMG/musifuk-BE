@@ -31,7 +31,7 @@ const ambulanceCarSchema = new mongoose.Schema({
   deliveryStatus: {
     type: String,
     enum: ["pending", "delivered", "on progress","cancelled"],
-    default: "not assgine",
+    default: "pending",
   },
 });
 ambulanceCarSchema.index({ "lastLocation.coordinates": "2dsphere" });
