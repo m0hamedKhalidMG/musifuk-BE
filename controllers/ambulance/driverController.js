@@ -30,7 +30,7 @@ exports.create = async (req, res) => {
 // Get all drivers
 exports.list = async (req, res) => {
    
-        const drivers = await Driver.find();
+        const drivers = await Driver.find().select("-password");
         res.json(drivers);
     } 
 
@@ -49,7 +49,7 @@ exports.get = async (req, res) => {
 // Update a driver by ID
 exports.update = async (req, res) => {
    
-        const updatedDriver = await Driver.findByIdAndUpdate(req.params.id, req.body, { new: true });
+        const updatedDriver = await Driver.findByIdAndUpdate(req.params.id, req.body, { new: true }).select("-password");
         if (!updatedDriver) {
             return res.status(404).json({ message: 'Driver not found' });
         }
