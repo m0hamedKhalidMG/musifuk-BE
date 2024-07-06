@@ -95,6 +95,8 @@ hospitalSchema.methods.updatedepartment = async function (name, numberOfBeds) {
 
     if (Departmentitems) {
       Departmentitems.numberOfBeds = numberOfBeds;
+            Departmentitems.available = numberOfBeds;
+
     } else {
       hospital.departments.push({ name, numberOfBeds });
     }
