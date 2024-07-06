@@ -77,6 +77,7 @@ hospitalSchema.methods.updateserumsAndVaccines = async function (name, quantity)
 
     if (serumsAndVaccinesitems) {
       serumsAndVaccinesitems.quantity = quantity;
+
     } else {
       hospital.serumsAndVaccines.push({ name, quantity });
     }
