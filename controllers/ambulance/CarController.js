@@ -11,7 +11,11 @@ exports.create = async (req, res) => {
 
 // Get all ambulance cars
 exports.list = async (req, res) => {
-  const ambulanceCars = await AmbulanceCar.find().populate("assignedDriver");
+    const ambulanceCars = await AmbulanceCar.find().populate({
+      path: "assignedDriver",
+      select: "-password" // Exclude the password field
+    });
+
   res.json(ambulanceCars);
 };
 
